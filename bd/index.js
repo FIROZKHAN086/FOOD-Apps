@@ -3,7 +3,7 @@ import connectDB from "./Config/db.js";
 import dotenv from "dotenv";
 import FoodsRouter from "./Routes/FoodR.js";
 import cors from "cors";
-
+import OrderRouter from "./Routes/OrderR.js";
 dotenv.config();
 
 const app = express();
@@ -22,6 +22,7 @@ app.get("/", (req, res) => {
 
 // Food Routes
 app.use("/api/foods", FoodsRouter);
+app.use("/api/orders", OrderRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
