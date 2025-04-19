@@ -132,44 +132,43 @@ const processUPIPayment = async (order) => {
   }
 };
 
+
+
+// ✅ Update payment status controller
 export const updatePaymentStatus = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const { status, transactionId, notes } = req.body;
+    try {
+        const { orderId } = req.params;
+        const { status, transactionId, notes } = req.body;
 
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found"
-      });
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found" });
+        }
+
+        order.paymentStatus = status;
+
+        if (transactionId) {
+            order.transactionId = transactionId;
+        }
+
+        if (notes) {
+            if (!order.paymentHistory) order.paymentHistory = [];
+            order.paymentHistory.push({
+                status,
+                notes,
+                timestamp: new Date()
+            });
+        }
+
+        await order.save();
+
+        res.status(200).json({ success: true, message: "Payment status updated", order });
+    } catch (error) {
+        console.error("Payment status update error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
-
-    order.paymentStatus = status;
-    order.paymentHistory.push({
-      status,
-      amount: order.totalAmount,
-      timestamp: new Date(),
-      transactionId,
-      notes
-    });
-
-    await order.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Payment status updated successfully",
-      data: order
-    });
-  } catch (error) {
-    console.error("Error updating payment status:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error updating payment status",
-      error: error.message
-    });
-  }
 };
+
 
 export const getOrderPaymentHistory = async (req, res) => {
   try {
