@@ -133,64 +133,105 @@ const processUPIPayment = async (order) => {
 };
 
 export const updatePaymentStatus = async (req, res) => {
-  const { orderId } = req.params;
-  const { status } = req.body;
-
-  if (!status) {
-    return res.status(400).json({ success: false, message: "Payment status is required" });
-  }
-
   try {
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Payment status is required" 
+      });
     }
 
+    const validStatuses = ['pending', 'completed', 'failed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid payment status" 
+      });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Order not found" 
+      });
+    }
+
+    // Update payment status
     order.paymentStatus = status;
+    
+    // Add to payment history
     order.paymentHistory.push({
       status,
       amount: order.totalAmount,
-      timestamp: new Date()
+      timestamp: new Date(),
+      notes: `Payment status updated to ${status}`
     });
 
     await order.save();
 
-    res.status(200).json({ 
+    return res.status(200).json({ 
       success: true, 
       message: "Payment status updated successfully",
-      order 
+      data: order 
     });
   } catch (error) {
     console.error("Error updating payment status:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error",
+      error: error.message 
+    });
   }
 };
 
 export const updateOrderStatus = async (req, res) => {
-  const { orderId } = req.params;
-  const { status } = req.body;
-
-  if (!status) {
-    return res.status(400).json({ success: false, message: "Order status is required" });
-  }
-
   try {
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Order status is required" 
+      });
     }
 
+    const validStatuses = ['pending', 'processing', 'delivered', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid order status" 
+      });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Order not found" 
+      });
+    }
+
+    // Update order status
     order.orderStatus = status;
     await order.save();
 
-    res.status(200).json({ 
+    return res.status(200).json({ 
       success: true, 
       message: "Order status updated successfully",
-      order 
+      data: order 
     });
   } catch (error) {
     console.error("Error updating order status:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error",
+      error: error.message 
+    });
   }
 };
 
@@ -222,16 +263,29 @@ export const getOrderPaymentHistory = async (req, res) => {
 
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 });
-    res.status(200).json({
+    const { status, paymentStatus } = req.query;
+    let query = {};
+
+    if (status && status !== 'all') {
+      query.orderStatus = status;
+    }
+    if (paymentStatus && paymentStatus !== 'all') {
+      query.paymentStatus = paymentStatus;
+    }
+
+    const orders = await Order.find(query)
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name email');
+
+    return res.status(200).json({
       success: true,
       data: orders
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Error fetching orders",
+      message: "Internal server error",
       error: error.message
     });
   }

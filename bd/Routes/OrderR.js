@@ -10,7 +10,7 @@ import {
     getOrderPaymentHistory,
     deleteOrder
 } from "../Controller/OrderC.js";
-import { body, check } from "express-validator";
+import { body, check, validationResult } from "express-validator";
 
 const OrderRouter = Router();
 
@@ -57,7 +57,7 @@ OrderRouter.post("/",
     createOrder
 );
 
-// Get all orders with optional status filter
+// Get all orders with filters
 OrderRouter.get("/", getAllOrders);
 
 // Get order by ID
@@ -74,17 +74,39 @@ OrderRouter.get("/:orderId/payment-history", getOrderPaymentHistory);
 
 // Update order status
 OrderRouter.put("/:orderId/status", 
-    body('status').isIn(['pending', 'processing', 'delivered', 'cancelled'])
-        .withMessage('Invalid order status'),
-    updateOrderStatus
+  body('status')
+    .isIn(['pending', 'processing', 'delivered', 'cancelled'])
+    .withMessage('Invalid order status'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: errors.array()[0].msg
+      });
+    }
+    next();
+  },
+  updateOrderStatus
 );
 
 // Update payment status
 OrderRouter.put(
-    "/:orderId/payment-status",
-    body('status').isIn(['pending', 'completed', 'failed'])
-        .withMessage('Invalid payment status'),
-    updatePaymentStatus
+  "/:orderId/payment-status",
+  body('status')
+    .isIn(['pending', 'completed', 'failed'])
+    .withMessage('Invalid payment status'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: errors.array()[0].msg
+      });
+    }
+    next();
+  },
+  updatePaymentStatus
 );
 
 // Delete order
