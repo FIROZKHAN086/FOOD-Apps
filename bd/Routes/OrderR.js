@@ -1,14 +1,15 @@
 import { Router } from "express";
 import {
-    createOrder,
-    getAllOrders,
-    getOrderById,
-    getOrdersByUserId,
-    getOrdersByStatus,
-    updateOrderStatus,
+  createOrder,
+  getAllOrders,
+  getOrderById,
+  getOrdersByUserId,
+  getOrdersByStatus,
+  updateOrderStatus,
     updatePaymentStatus,
     getOrderPaymentHistory,
     deleteOrder
+    
 } from "../Controller/OrderC.js";
 import { body, check } from "express-validator";
 

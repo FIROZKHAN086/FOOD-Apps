@@ -132,41 +132,44 @@ const processUPIPayment = async (order) => {
   }
 };
 
+export const updatePaymentStatus = async (req, res) => {
+  const { orderId } = req.params;
+  const { status, transactionId, notes } = req.body;
+
+  try {
+      const updatedPaymentStatus = await Order.findByIdAndUpdate(orderId, { 
+          paymentStatus: status,
+          transactionId,
+          notes
+      }, { new: true });
+
+      if (!updatedPaymentStatus) {
+          return res.status(404).json({ success: false, message: 'Order not found' });
+      }
+      res.status(200).json({ success: true, updatedPaymentStatus });
+  } catch (error) {
+      console.error('Error updating payment status:', error);
+      res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 
 
 // ✅ Update payment status controller
-export const updatePaymentStatus = async (req, res) => {
-    try {
-        const { orderId } = req.params;
-        const { status, transactionId, notes } = req.body;
+export const updateOrderStatus = async (req, res) => {
+  const { orderId } = req.params;
+  const { status } = req.body;  // status should come from request body
 
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return res.status(404).json({ success: false, message: "Order not found" });
-        }
-
-        order.paymentStatus = status;
-
-        if (transactionId) {
-            order.transactionId = transactionId;
-        }
-
-        if (notes) {
-            if (!order.paymentHistory) order.paymentHistory = [];
-            order.paymentHistory.push({
-                status,
-                notes,
-                timestamp: new Date()
-            });
-        }
-
-        await order.save();
-
-        res.status(200).json({ success: true, message: "Payment status updated", order });
-    } catch (error) {
-        console.error("Payment status update error:", error);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
-    }
+  try {
+      const updatedOrder = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
+      if (!updatedOrder) {
+          return res.status(404).json({ success: false, message: 'Order not found' });
+      }
+      res.status(200).json({ success: true, updatedOrder });
+  } catch (error) {
+      console.error('Error updating order status:', error);
+      res.status(500).json({ success: false, message: 'Server error' });
+  }
 };
 
 
@@ -263,38 +266,7 @@ export const getOrdersByStatus = async (req, res) => {
   }
 };
 
-export const updateOrderStatus = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const { status } = req.body;
 
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      { orderStatus: status },
-      { new: true }
-    );
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found"
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Order status updated successfully",
-      data: order
-    });
-  } catch (error) {
-    console.error("Error updating order status:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error updating order status",
-      error: error.message
-    });
-  }
-};
 
 export const deleteOrder = async (req, res) => {
   try {
