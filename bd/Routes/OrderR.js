@@ -74,7 +74,7 @@ OrderRouter.get("/:orderId/payment-history", getOrderPaymentHistory);
 
 // Update order status
 // Update order status
-OrderRouter.put("/:orderId/order-status", 
+OrderRouter.put("/:orderId/status", 
     body('status').isIn(['pending', 'processing', 'delivered', 'cancelled'])
         .withMessage('Invalid order status'),
     updateOrderStatus
