@@ -35,24 +35,100 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ["cash", "card", "online"],
-    default: "cash",
+    enum: ["cash", "card", "upi"],
+    required: true,
+    default: "cash"
+  },
+  paymentDetails: {
+    // For card payments
+    card: {
+      cardHolderName: {
+        type: String,
+        required: function() {
+          return this.paymentMethod === "card";
+        }
+      },
+      cardNumber: {
+        type: String,
+        required: function() {
+          return this.paymentMethod === "card";
+        }
+      },
+      expiryDate: {
+        type: String,
+        required: function() {
+          return this.paymentMethod === "card";
+        }
+      },
+      cvv: {
+        type: String,
+        required: function() {
+          return this.paymentMethod === "card";
+        }
+      }
+    },
+    // For UPI payments
+    upi: {
+      upiId: {
+        type: String,
+        required: function() {
+          return this.paymentMethod === "upi";
+        }
+      },
+      transactionId: {
+        type: String,
+        required: function() {
+          return this.paymentMethod === "upi";
+        }
+      }
+    }
   },
   paymentStatus: {
     type: String,
-    enum: ["pending", "paid", "failed"],
-    default: "pending",
+    enum: ["pending", "processing", "completed", "failed", "refunded"],
+    default: "pending"
   },
-  status: {
+  paymentHistory: [{
+    status: {
+      type: String,
+      required: true
+    },
+    amount: {
+      type: Number,
+      required: true
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    },
+    transactionId: String,
+    notes: String
+  }],
+  orderStatus: {
     type: String,
     enum: ["pending", "processing", "delivered", "cancelled"],
-    default: "pending",
+    default: "pending"
+  },
+  deliveryAddress: {
+    street: String,
+    city: String,
+    state: String,
+    zipCode: String,
+    country: String
   },
   createdAt: {
     type: Date,
     default: Date.now
   }
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  versionKey: false 
+});
+
+// Index for faster queries
+orderSchema.index({ userId: 1, createdAt: -1 });
+orderSchema.index({ paymentStatus: 1 });
+orderSchema.index({ orderStatus: 1 });
 
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 export default Order;
