@@ -302,14 +302,47 @@ export const getOrderById = async (req, res) => {
 
 export const getOrdersByUserId = async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.params.userId })
+    const { firebaseId } = req.params;
+
+    if (!firebaseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Firebase user ID is required"
+      });
+    }
+
+    // Find orders by Firebase user ID
+    const orders = await Order.find({ userId: firebaseId })
       .sort({ createdAt: -1 });
+
+    if (!orders || orders.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No orders found for this user",
+        data: []
+      });
+    }
+
+    // Format the response
+    const formattedOrders = orders.map(order => ({
+      _id: order._id,
+      userId: order.userId,
+      products: order.products,
+      totalAmount: order.totalAmount,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      orderStatus: order.orderStatus,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt
+    }));
+
     res.status(200).json({
       success: true,
-      data: orders
+      message: "Orders fetched successfully",
+      data: formattedOrders
     });
   } catch (error) {
-    console.error("Error fetching user orders:", error);
+    console.error("Error in getOrdersByUserId:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching user orders",

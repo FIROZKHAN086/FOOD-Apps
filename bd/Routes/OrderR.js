@@ -6,7 +6,10 @@ import {
   updateOrderStatus,
   updatePaymentStatus,
   getOrderPaymentHistory,
-  deleteOrder
+  deleteOrder,
+  getOrdersByUserId,
+  getOrdersByStatus,
+  createOrder
 } from "../Controller/OrderC.js";
 
 const OrderRouter = Router();
@@ -28,6 +31,9 @@ OrderRouter.get("/", getAllOrders);
 
 // Get order by ID
 OrderRouter.get("/:id", getOrderById);
+
+// Get orders by Firebase user ID
+OrderRouter.get("/user/:firebaseId", getOrdersByUserId);
 
 // Update order status
 OrderRouter.put(
@@ -60,6 +66,12 @@ OrderRouter.get("/:orderId/payment-history", getOrderPaymentHistory);
 
 // Delete order
 OrderRouter.delete("/:id", deleteOrder);
+
+// Get orders by status
+OrderRouter.get("/status/:status", getOrdersByStatus);
+
+// Create a new order
+OrderRouter.post("/", createOrder);
 
 // Handle 404 for order routes
 OrderRouter.use((req, res) => {
