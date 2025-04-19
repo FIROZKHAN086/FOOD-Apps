@@ -137,66 +137,46 @@ export const updatePaymentStatus = async (req, res) => {
     const { orderId } = req.params;
     const { status } = req.body;
 
-    console.log("Updating payment status:", { orderId, status });
-
-    if (!status) {
-      return res.status(400).json({
-        success: false,
-        message: "Payment status is required"
-      });
-    }
-
-    const validStatuses = ['pending', 'completed', 'failed'];
-    if (!validStatuses.includes(status)) {
+    // Simple validation
+    if (!status || !['pending', 'completed', 'failed'].includes(status)) {
       return res.status(400).json({
         success: false,
         message: "Invalid payment status"
       });
     }
 
-    // Find and update the order in one operation
-    const updatedOrder = await Order.findOneAndUpdate(
-      { _id: orderId },
-      {
-        $set: { paymentStatus: status },
-        $push: {
-          paymentHistory: {
-            status,
-            amount: 0, // This will be updated in the next step
-            timestamp: new Date(),
-            notes: `Payment status updated to ${status}`
-          }
-        }
-      },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedOrder) {
+    // Find the order
+    const order = await Order.findById(orderId);
+    if (!order) {
       return res.status(404).json({
         success: false,
         message: "Order not found"
       });
     }
 
-    // Update the amount in the latest payment history entry
-    const latestPaymentHistory = updatedOrder.paymentHistory[updatedOrder.paymentHistory.length - 1];
-    latestPaymentHistory.amount = updatedOrder.totalAmount;
-    await updatedOrder.save();
+    // Update payment status
+    order.paymentStatus = status;
+    
+    // Add to payment history
+    order.paymentHistory.push({
+      status,
+      amount: order.totalAmount,
+      timestamp: new Date()
+    });
 
-    console.log("Payment status updated successfully:", updatedOrder);
+    // Save the order
+    await order.save();
 
     return res.status(200).json({
       success: true,
       message: "Payment status updated successfully",
-      data: updatedOrder
+      data: order
     });
   } catch (error) {
-    console.error("Error updating payment status:", error);
+    console.error("Error in updatePaymentStatus:", error);
     return res.status(500).json({
       success: false,
-      message: "Error updating payment status",
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: "Error updating payment status"
     });
   }
 };
@@ -371,4 +351,4 @@ export const deleteOrder = async (req, res) => {
   }
 };
 
-// payment status
+
