@@ -137,28 +137,30 @@ export const updatePaymentStatus = async (req, res) => {
   const { status, transactionId, notes } = req.body;
 
   try {
-    const updatedOrder = await Order.findByIdAndUpdate(
-      orderId,
-      {
-        paymentStatus: status,
-        transactionId,
-        notes,
-      },
-      { new: true }
-    );
-
-    if (!updatedOrder) {
+    const order = await Order.findById(orderId);
+    if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    console.log("Updated Order Payment:", updatedOrder);
+    order.paymentStatus = status;
+    order.transactionId = transactionId || order.transactionId;
+    order.notes = notes || "";
 
-    res.status(200).json({ success: true, order: updatedOrder });
+    order.paymentHistory.push({
+      status,
+      amount: order.totalAmount,
+      timestamp: new Date()
+    });
+
+    await order.save();
+
+    res.status(200).json({ success: true, order });
   } catch (error) {
     console.error("Error updating payment status:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 
 
 
