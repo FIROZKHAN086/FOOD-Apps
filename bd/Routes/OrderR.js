@@ -80,13 +80,8 @@ OrderRouter.put("/:orderId/status",
 );
 
 // Update payment status
-OrderRouter.put("/:orderId/status",
-    body('status').isIn(['pending', 'processing', 'completed', 'failed', 'refunded'])
-        .withMessage('Invalid payment status'),
-    body('transactionId').optional().isString(),
-    body('notes').optional().isString(),
-    updatePaymentStatus
-);
+OrderRouter.put("/:orderId/status", updatePaymentStatus);
+
 
 // Delete order
 OrderRouter.delete("/:id", deleteOrder);
