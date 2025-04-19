@@ -137,33 +137,23 @@ export const updatePaymentStatus = async (req, res) => {
     const { orderId } = req.params;
     const { status } = req.body;
 
-    if (!status) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Payment status is required" 
-      });
-    }
-
     const validStatuses = ['pending', 'completed', 'failed'];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid payment status" 
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payment status"
       });
     }
 
     const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Order not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
       });
     }
 
-    // Update payment status
     order.paymentStatus = status;
-    
-    // Add to payment history
     order.paymentHistory.push({
       status,
       amount: order.totalAmount,
@@ -173,17 +163,17 @@ export const updatePaymentStatus = async (req, res) => {
 
     await order.save();
 
-    return res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       message: "Payment status updated successfully",
-      data: order 
+      data: order
     });
   } catch (error) {
     console.error("Error updating payment status:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: "Internal server error",
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: "Error updating payment status",
+      error: error.message
     });
   }
 };
@@ -193,53 +183,43 @@ export const updateOrderStatus = async (req, res) => {
     const { orderId } = req.params;
     const { status } = req.body;
 
-    if (!status) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Order status is required" 
-      });
-    }
-
     const validStatuses = ['pending', 'processing', 'delivered', 'cancelled'];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid order status" 
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order status"
       });
     }
 
     const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Order not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
       });
     }
 
-    // Update order status
     order.orderStatus = status;
     await order.save();
 
-    return res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       message: "Order status updated successfully",
-      data: order 
+      data: order
     });
   } catch (error) {
     console.error("Error updating order status:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: "Internal server error",
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: "Error updating order status",
+      error: error.message
     });
   }
 };
 
 export const getOrderPaymentHistory = async (req, res) => {
   try {
-    const { orderId } = req.params;
-    const order = await Order.findById(orderId);
-
+    const order = await Order.findById(req.params.orderId);
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -277,15 +257,15 @@ export const getAllOrders = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate('userId', 'name email');
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       data: orders
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Error fetching orders",
       error: error.message
     });
   }
@@ -293,13 +273,16 @@ export const getAllOrders = async (req, res) => {
 
 export const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id)
+      .populate('userId', 'name email');
+    
     if (!order) {
       return res.status(404).json({
         success: false,
         message: "Order not found"
       });
     }
+
     res.status(200).json({
       success: true,
       data: order
@@ -344,10 +327,24 @@ export const getOrdersByStatus = async (req, res) => {
 export const deleteOrder = async (req, res) => {
   try {
     const order = await Order.findByIdAndDelete(req.params.id);
-    if (!order) return res.status(404).json({ message: "Not found" });
-    res.status(200).json({ message: "Deleted" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Order deleted successfully"
+    });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting order",
+      error: error.message
+    });
   }
 };
 
