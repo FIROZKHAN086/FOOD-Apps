@@ -26,52 +26,42 @@ const validateRequest = (req, res, next) => {
   next();
 };
 
+// Create a new order
+OrderRouter.post("/", createOrder);
+
 // Get all orders with filters
 OrderRouter.get("/", getAllOrders);
+
+// Get orders by user ID (Firebase ID) - This must come before /:id
+OrderRouter.get("/user/:firebaseId", getOrdersByUserId);
+
+// Get orders by status
+OrderRouter.get("/status/:status", getOrdersByStatus);
 
 // Get order by ID
 OrderRouter.get("/:id", getOrderById);
 
-// Get orders by Firebase user ID
-OrderRouter.get("/user/:firebaseId", getOrdersByUserId);
-
 // Update order status
-OrderRouter.put(
-  "/:orderId/status",
-  [
-    body("status")
-      .isIn(["pending", "processing", "delivered", "cancelled"])
-      .withMessage("Invalid order status")
-  ],
-  validateRequest,
-  updateOrderStatus
-);
+OrderRouter.put("/:orderId/status", [
+  body("status")
+    .isIn(["pending", "processing", "delivered", "cancelled"])
+    .withMessage("Invalid order status")
+], validateRequest, updateOrderStatus);
 
 // Update payment status
-OrderRouter.put(
-  "/:orderId/payment-status",
-  [
-    body("status")
-      .notEmpty()
-      .withMessage("Payment status is required")
-      .isIn(["pending", "completed", "failed"])
-      .withMessage("Invalid payment status")
-  ],
-  validateRequest,
-  updatePaymentStatus
-);
+OrderRouter.put("/:orderId/payment-status", [
+  body("status")
+    .notEmpty()
+    .withMessage("Payment status is required")
+    .isIn(["pending", "completed", "failed"])
+    .withMessage("Invalid payment status")
+], validateRequest, updatePaymentStatus);
 
 // Get payment history for an order
 OrderRouter.get("/:orderId/payment-history", getOrderPaymentHistory);
 
 // Delete order
 OrderRouter.delete("/:id", deleteOrder);
-
-// Get orders by status
-OrderRouter.get("/status/:status", getOrdersByStatus);
-
-// Create a new order
-OrderRouter.post("/", createOrder);
 
 // Handle 404 for order routes
 OrderRouter.use((req, res) => {

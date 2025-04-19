@@ -1,11 +1,10 @@
 import express from "express";
-import connectDB from "./Config/db.js";
-import dotenv from "dotenv";
-import FoodsRouter from "./Routes/FoodR.js";
+import mongoose from "mongoose";
 import cors from "cors";
+import dotenv from "dotenv";
 import OrderRouter from "./Routes/OrderR.js";
+import FoodsRouter from "./Routes/FoodR.js";
 import ReviewRouter from "./Routes/ReviweR.js";
-
 
 dotenv.config();
 
@@ -13,12 +12,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
+app.use(cors());
 app.use(express.json());
-
-app.use(cors({
-    origin:  "*",
-    credentials: true,
-}));
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -36,16 +31,25 @@ app.use("/api/foods", FoodsRouter);
 app.use("/api/orders", OrderRouter);
 app.use("/api/reviews", ReviewRouter);
 
-// Handle 404 for all other routes
-
-
 // Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    message: "Something broke!",
+    error: err.message
+  });
+});
 
-// Connect to Database
-connectDB();
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 // Start server
 const server = app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
+
+export default app;
 

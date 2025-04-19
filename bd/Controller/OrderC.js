@@ -311,41 +311,42 @@ export const getOrdersByUserId = async (req, res) => {
       });
     }
 
-    // Find orders by Firebase user ID
+    console.log('Fetching orders for user:', firebaseId); // Debug log
+
     const orders = await Order.find({ userId: firebaseId })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean(); // Using lean() for better performance
 
-    if (!orders || orders.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: "No orders found for this user",
-        data: []
-      });
-    }
+    console.log('Found orders:', orders.length); // Debug log
 
-    // Format the response
+    // Format the response data
     const formattedOrders = orders.map(order => ({
       _id: order._id,
       userId: order.userId,
-      products: order.products,
-      totalAmount: order.totalAmount,
+      products: order.products.map(product => ({
+        ...product,
+        price: Number(product.price),
+        quantity: Number(product.quantity)
+      })),
+      totalAmount: Number(order.totalAmount),
       paymentMethod: order.paymentMethod,
-      paymentStatus: order.paymentStatus,
-      orderStatus: order.orderStatus,
+      paymentStatus: order.paymentStatus || 'pending',
+      orderStatus: order.orderStatus || 'pending',
       createdAt: order.createdAt,
       updatedAt: order.updatedAt
     }));
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Orders fetched successfully",
+      message: orders.length ? "Orders fetched successfully" : "No orders found",
       data: formattedOrders
     });
+
   } catch (error) {
-    console.error("Error in getOrdersByUserId:", error);
-    res.status(500).json({
+    console.error('Error in getOrdersByUserId:', error);
+    return res.status(500).json({
       success: false,
-      message: "Error fetching user orders",
+      message: "Error fetching orders",
       error: error.message
     });
   }
