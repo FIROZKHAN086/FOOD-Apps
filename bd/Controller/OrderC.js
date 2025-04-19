@@ -137,6 +137,15 @@ export const updatePaymentStatus = async (req, res) => {
     const { orderId } = req.params;
     const { status } = req.body;
 
+    console.log("Updating payment status:", { orderId, status });
+
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment status is required"
+      });
+    }
+
     const validStatuses = ['pending', 'completed', 'failed'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
@@ -153,7 +162,10 @@ export const updatePaymentStatus = async (req, res) => {
       });
     }
 
+    // Update payment status
     order.paymentStatus = status;
+    
+    // Add to payment history
     order.paymentHistory.push({
       status,
       amount: order.totalAmount,
@@ -161,19 +173,22 @@ export const updatePaymentStatus = async (req, res) => {
       notes: `Payment status updated to ${status}`
     });
 
-    await order.save();
+    // Save the order
+    const updatedOrder = await order.save();
+    console.log("Payment status updated successfully:", updatedOrder);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Payment status updated successfully",
-      data: order
+      data: updatedOrder
     });
   } catch (error) {
     console.error("Error updating payment status:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Error updating payment status",
-      error: error.message
+      error: error.message,
+      stack: error.stack
     });
   }
 };

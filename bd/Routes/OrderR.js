@@ -46,6 +46,8 @@ OrderRouter.put(
   "/:orderId/payment-status",
   [
     body("status")
+      .notEmpty()
+      .withMessage("Payment status is required")
       .isIn(["pending", "completed", "failed"])
       .withMessage("Invalid payment status")
   ],
