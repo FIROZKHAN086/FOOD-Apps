@@ -57,7 +57,7 @@ OrderRouter.post("/",
     createOrder
 );
 
-// Get all orders
+// Get all orders with optional status filter
 OrderRouter.get("/", getAllOrders);
 
 // Get order by ID
@@ -73,21 +73,19 @@ OrderRouter.get("/status/:status", getOrdersByStatus);
 OrderRouter.get("/:orderId/payment-history", getOrderPaymentHistory);
 
 // Update order status
-// Update order status
 OrderRouter.put("/:orderId/status", 
     body('status').isIn(['pending', 'processing', 'delivered', 'cancelled'])
         .withMessage('Invalid order status'),
     updateOrderStatus
-  );
-  
-  // Update payment status
-  OrderRouter.put(
-    "/:orderId/payment-status",
-    body('status').isIn(['pending', 'completed', 'failed']).withMessage("Invalid payment status"),
-    updatePaymentStatus
-  );
-  
+);
 
+// Update payment status
+OrderRouter.put(
+    "/:orderId/payment-status",
+    body('status').isIn(['pending', 'completed', 'failed'])
+        .withMessage('Invalid payment status'),
+    updatePaymentStatus
+);
 
 // Delete order
 OrderRouter.delete("/:id", deleteOrder);
