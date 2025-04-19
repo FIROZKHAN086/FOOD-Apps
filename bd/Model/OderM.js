@@ -85,14 +85,16 @@ const orderSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['pending', 'paid', 'failed'], // or whatever statuses you're using
-    default: 'pending',
+    enum: ["pending", "paid", "failed"],
+    default: "pending",
   },
   transactionId: {
     type: String,
+    default: null,
   },
   notes: {
     type: String,
+    default: "",
   },
   paymentHistory: [{
     status: {
@@ -107,8 +109,7 @@ const orderSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     },
-    transactionId: String,
-    notes: String
+   
   }],
   orderStatus: {
     type: String,

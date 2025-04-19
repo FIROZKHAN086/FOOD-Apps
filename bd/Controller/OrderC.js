@@ -137,7 +137,7 @@ export const updatePaymentStatus = async (req, res) => {
   const { status, transactionId, notes } = req.body;
 
   try {
-    const updatedPaymentStatus = await Order.findByIdAndUpdate(
+    const updatedOrder = await Order.findByIdAndUpdate(
       orderId,
       {
         paymentStatus: status,
@@ -147,12 +147,13 @@ export const updatePaymentStatus = async (req, res) => {
       { new: true }
     );
 
-    if (!updatedPaymentStatus) {
+    if (!updatedOrder) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    console.log("Updated Payment Document:", updatedPaymentStatus); // 👈 Add this
-    res.status(200).json({ success: true, updatedPaymentStatus });
+    console.log("Updated Order Payment:", updatedOrder);
+
+    res.status(200).json({ success: true, order: updatedOrder });
   } catch (error) {
     console.error("Error updating payment status:", error);
     res.status(500).json({ success: false, message: "Server error" });

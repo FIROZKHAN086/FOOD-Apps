@@ -6,10 +6,9 @@ import {
   getOrdersByUserId,
   getOrdersByStatus,
   updateOrderStatus,
-    updatePaymentStatus,
+  updatePaymentStatus,
     getOrderPaymentHistory,
     deleteOrder
-    
 } from "../Controller/OrderC.js";
 import { body, check } from "express-validator";
 
@@ -81,7 +80,7 @@ OrderRouter.put("/:orderId/status",
 );
 
 // Update payment status
-OrderRouter.put("/:orderId/payment-status",
+OrderRouter.put("/:orderId/status",
     body('status').isIn(['pending', 'processing', 'completed', 'failed', 'refunded'])
         .withMessage('Invalid payment status'),
     body('transactionId').optional().isString(),
