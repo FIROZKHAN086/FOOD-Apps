@@ -136,6 +136,10 @@ export const updatePaymentStatus = async (req, res) => {
   const { orderId } = req.params;
   const { status, transactionId, notes } = req.body;
 
+  if (!status) {
+    return res.status(400).json({ success: false, message: "Payment status is required" });
+  }
+
   try {
     const order = await Order.findById(orderId);
     if (!order) {
@@ -143,13 +147,15 @@ export const updatePaymentStatus = async (req, res) => {
     }
 
     order.paymentStatus = status;
-    order.transactionId = transactionId || order.transactionId;
-    order.notes = notes || "";
+    if (transactionId) order.transactionId = transactionId;
+    if (notes) order.notes = notes;
 
     order.paymentHistory.push({
       status,
       amount: order.totalAmount,
-      timestamp: new Date()
+      timestamp: new Date(),
+      transactionId: transactionId || undefined,
+      notes: notes || ''
     });
 
     await order.save();
@@ -160,6 +166,7 @@ export const updatePaymentStatus = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 
 
 

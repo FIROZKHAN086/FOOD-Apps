@@ -81,7 +81,11 @@ OrderRouter.put("/:orderId/status",
   );
   
   // Update payment status
-  OrderRouter.put("/:orderId/payment-status", updatePaymentStatus);
+  OrderRouter.put(
+    "/:orderId/payment-status",
+    body('status').isIn(['pending', 'completed', 'failed']).withMessage("Invalid payment status"),
+    updatePaymentStatus
+  );
   
 
 
