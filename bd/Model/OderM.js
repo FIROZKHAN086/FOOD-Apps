@@ -2,42 +2,41 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema({
   userId: {
-    type: String,
-    required: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
-  products: [
-    {
-      productId: {
-        type: String,
-        required: true
-      },
-      name: {
-        type: String,
-        required: true
-      },
-      price: {
-        type: Number,
-        required: true
-      },
-      quantity: {
-        type: Number,
-        required: true
-      },
-      image: {
-        type: String,
-        required: true
-      }
+  products: [{
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    price: {
+      type: Number,
+      required: true
+    },
+    quantity: {
+      type: Number,
+      required: true
+    },
+    image: {
+      type: String,
+      required: true
     }
-  ],
+  }],
   totalAmount: {
     type: Number,
-    required: true,
+    required: true
   },
   paymentMethod: {
     type: String,
     enum: ["cash", "card", "upi"],
-    required: true,
-    default: "cash"
+    required: true
   },
   paymentDetails: {
     // For card payments
@@ -85,8 +84,8 @@ const orderSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ["pending", "paid", "failed"],
-    default: "pending",
+    enum: ["pending", "completed", "failed"],
+    default: "pending"
   },
   transactionId: {
     type: String,
@@ -109,7 +108,7 @@ const orderSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     },
-   
+    notes: String
   }],
   orderStatus: {
     type: String,
@@ -127,15 +126,16 @@ const orderSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-}, { 
-  timestamps: true,
-  versionKey: false 
+}, {
+  timestamps: true
 });
 
-// Index for faster queries
-orderSchema.index({ userId: 1, createdAt: -1 });
+// Add indexes for better query performance
+orderSchema.index({ userId: 1 });
 orderSchema.index({ paymentStatus: 1 });
 orderSchema.index({ orderStatus: 1 });
+orderSchema.index({ createdAt: -1 });
 
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
+
 export default Order;

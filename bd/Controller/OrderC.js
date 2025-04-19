@@ -154,27 +154,35 @@ export const updatePaymentStatus = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(orderId);
-    if (!order) {
+    // Find and update the order in one operation
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id: orderId },
+      {
+        $set: { paymentStatus: status },
+        $push: {
+          paymentHistory: {
+            status,
+            amount: 0, // This will be updated in the next step
+            timestamp: new Date(),
+            notes: `Payment status updated to ${status}`
+          }
+        }
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedOrder) {
       return res.status(404).json({
         success: false,
         message: "Order not found"
       });
     }
 
-    // Update payment status
-    order.paymentStatus = status;
-    
-    // Add to payment history
-    order.paymentHistory.push({
-      status,
-      amount: order.totalAmount,
-      timestamp: new Date(),
-      notes: `Payment status updated to ${status}`
-    });
+    // Update the amount in the latest payment history entry
+    const latestPaymentHistory = updatedOrder.paymentHistory[updatedOrder.paymentHistory.length - 1];
+    latestPaymentHistory.amount = updatedOrder.totalAmount;
+    await updatedOrder.save();
 
-    // Save the order
-    const updatedOrder = await order.save();
     console.log("Payment status updated successfully:", updatedOrder);
 
     return res.status(200).json({
@@ -188,7 +196,7 @@ export const updatePaymentStatus = async (req, res) => {
       success: false,
       message: "Error updating payment status",
       error: error.message,
-      stack: error.stack
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
