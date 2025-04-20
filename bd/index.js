@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import OrderRouter from "./Routes/OrderR.js";
 import FoodsRouter from "./Routes/FoodR.js";
 import ReviewRouter from "./Routes/ReviweR.js";
-
+import connectDB from "./Config/db.js";
 dotenv.config();
 
 const app = express();
@@ -42,9 +42,7 @@ app.use((err, req, res, next) => {
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+connectDB();
 
 // Start server
 const server = app.listen(port, () => {
